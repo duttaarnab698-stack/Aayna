@@ -7,3 +7,8 @@ npm-debug.log*
 !aayna_cinematic_15s.mp4
 *.heic
 videos/
+!videos/
+!videos/bangla-vasha.mov
+!videos/black-ethnic.mov
+!videos/ogochalo-shohor.mov
+!videos/shesh-sur.mov
