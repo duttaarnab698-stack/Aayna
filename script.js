@@ -16,7 +16,7 @@ const videoData = [
     views: "New",
     date: "Feb 21, 2026",
     thumbnail: "images/bangla-vasha-thumb.jpeg",
-    videoUrl: "aayna_cinematic_15s.mp4",
+    videoUrl: "videos/bangla-vasha.mov",
     isPortrait: true
   },
   {
@@ -26,7 +26,7 @@ const videoData = [
     views: "New",
     date: "Feb 15, 2026",
     thumbnail: "images/ogochalo-shohor-thumb.jpg",
-    videoUrl: "aayna_cinematic_15s.mp4",
+    videoUrl: "videos/ogochalo-shohor.mov",
     isPortrait: true
   },
   {
@@ -36,7 +36,7 @@ const videoData = [
     views: "New",
     date: "Feb 14, 2026",
     thumbnail: "images/black-ethnic-thumb.jpg",
-    videoUrl: "aayna_cinematic_15s.mp4",
+    videoUrl: "videos/black-ethnic.mov",
     isPortrait: true
   },
   {
@@ -46,7 +46,7 @@ const videoData = [
     views: "New",
     date: "Feb 24, 2026",
     thumbnail: "images/shesh-sur-thumb.jpg",
-    videoUrl: "aayna_cinematic_15s.mp4",
+    videoUrl: "videos/shesh-sur.mov",
     isPortrait: true
   }
 ];
@@ -58,7 +58,7 @@ const featuredCreationsData = [
     duration: "00:37",
     category: "Music",
     thumbnail: "images/bangla-vasha-thumb.jpeg",
-    videoUrl: "aayna_cinematic_15s.mp4",
+    videoUrl: "videos/bangla-vasha.mov",
     isPortrait: true
   },
   {
@@ -67,7 +67,7 @@ const featuredCreationsData = [
     duration: "00:44",
     category: "Short Film",
     thumbnail: "images/shesh-sur-thumb.jpg",
-    videoUrl: "aayna_cinematic_15s.mp4",
+    videoUrl: "videos/shesh-sur.mov",
     isPortrait: true
   },
   {
@@ -76,16 +76,16 @@ const featuredCreationsData = [
     duration: "00:28",
     category: "Short Reels",
     thumbnail: "images/ogochalo-shohor-thumb.jpg",
-    videoUrl: "aayna_cinematic_15s.mp4",
+    videoUrl: "videos/ogochalo-shohor.mov",
     isPortrait: true
   }
 ];
 
 // Cinematic hero background reels.
 const heroReelVideos = [
-  { src: "aayna_cinematic_15s.mp4", thumb: "images/shesh-sur-thumb.jpg" },
-  { src: "aayna_cinematic_15s.mp4", thumb: "images/ogochalo-shohor-thumb.jpg" },
-  { src: "aayna_cinematic_15s.mp4", thumb: "images/black-ethnic-thumb.jpg" }
+  { src: "videos/shesh-sur.mov", thumb: "images/shesh-sur-thumb.jpg" },
+  { src: "videos/ogochalo-shohor.mov", thumb: "images/ogochalo-shohor-thumb.jpg" },
+  { src: "videos/black-ethnic.mov", thumb: "images/black-ethnic-thumb.jpg" }
 ];
 
 let activeCategory = "All";
@@ -1372,5 +1372,4 @@ function initPortfolioPage() {
 initAuthModal();
 initStandaloneLoginPage();
 initPortfolioPage();
-
 
