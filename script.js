@@ -6,7 +6,6 @@
 const USERS_KEY = "AAYNA_USERS";
 const CURRENT_USER_KEY = "AAYNA_CURRENT_USER";
 const LOCAL_OTP_KEY = "AAYNA_LOCAL_OTP";
-const DEPLOY_FALLBACK_VIDEO = "aayna_cinematic_15s.mp4";
 
 // Portfolio video data.
 const videoData = [
@@ -84,9 +83,9 @@ const featuredCreationsData = [
 
 // Cinematic hero background reels.
 const heroReelVideos = [
-  { src: "videos/shesh-sur.mov", fallbackSrc: DEPLOY_FALLBACK_VIDEO, thumb: "images/shesh-sur-thumb.jpg" },
-  { src: "videos/ogochalo-shohor.mov", fallbackSrc: DEPLOY_FALLBACK_VIDEO, thumb: "images/ogochalo-shohor-thumb.jpg" },
-  { src: "videos/black-ethnic.mov", fallbackSrc: DEPLOY_FALLBACK_VIDEO, thumb: "images/black-ethnic-thumb.jpg" }
+  { src: "videos/shesh-sur.mov", thumb: "images/shesh-sur-thumb.jpg" },
+  { src: "videos/ogochalo-shohor.mov", thumb: "images/ogochalo-shohor-thumb.jpg" },
+  { src: "videos/black-ethnic.mov", thumb: "images/black-ethnic-thumb.jpg" }
 ];
 
 let activeCategory = "All";
@@ -721,11 +720,10 @@ function createVideoCard(video) {
   const card = document.createElement("article");
   card.className = "video-card reveal";
   const thumbClass = video.id === 11 ? "contain-thumb" : "";
-  const fallbackSrc = video.fallbackVideoUrl || DEPLOY_FALLBACK_VIDEO;
   card.innerHTML = `
     <div class="video-thumb preview-media">
       <img class="${thumbClass}" src="${video.thumbnail}" alt="${video.title} thumbnail" loading="lazy" />
-      <video class="preview-video" src="${video.videoUrl}" data-fallback-src="${fallbackSrc}" muted loop playsinline preload="metadata"></video>
+      <video class="preview-video" src="${video.videoUrl}" muted loop playsinline preload="metadata"></video>
       <div class="play-badge"><span>&#9658;</span></div>
     </div>
     <div class="video-meta">
@@ -739,11 +737,10 @@ function createVideoCard(video) {
 function createFeaturedCard(item) {
   const card = document.createElement("article");
   card.className = "featured-card reveal";
-  const fallbackSrc = item.fallbackVideoUrl || DEPLOY_FALLBACK_VIDEO;
   card.innerHTML = `
     <div class="preview-media">
       <img src="${item.thumbnail}" alt="${item.title} thumbnail" loading="lazy" />
-      <video class="preview-video" src="${item.videoUrl}" data-fallback-src="${fallbackSrc}" muted loop playsinline preload="metadata"></video>
+      <video class="preview-video" src="${item.videoUrl}" muted loop playsinline preload="metadata"></video>
     </div>
     <div class="featured-meta">
       <h4>${item.title}</h4>
@@ -760,15 +757,6 @@ function bindPreviewPlayback(card) {
 
   previewVideo.muted = true;
   previewVideo.playsInline = true;
-  const fallbackSrc = previewVideo.dataset.fallbackSrc || DEPLOY_FALLBACK_VIDEO;
-  let fallbackApplied = false;
-
-  previewVideo.addEventListener("error", () => {
-    if (fallbackApplied || !fallbackSrc) return;
-    fallbackApplied = true;
-    previewVideo.src = fallbackSrc;
-    previewVideo.load();
-  });
 
   card.addEventListener("mouseenter", () => {
     previewVideo.currentTime = 0;
@@ -878,17 +866,7 @@ function initHeroBackground() {
 
   const loadAndPlay = (videoEl, index) =>
     new Promise((resolve) => {
-      const reel = heroReelVideos[index];
-      const source = reel.src;
-      const fallbackSource = reel.fallbackSrc || DEPLOY_FALLBACK_VIDEO;
-      let fallbackApplied = false;
-
-      const setSource = (src) => {
-        videoEl.dataset.src = src;
-        videoEl.src = src;
-        videoEl.load();
-      };
-
+      const source = heroReelVideos[index].src;
       const onReady = () => {
         videoEl.removeEventListener("loadeddata", onReady);
         videoEl.removeEventListener("error", onError);
@@ -897,18 +875,15 @@ function initHeroBackground() {
         resolve();
       };
       const onError = () => {
-        if (!fallbackApplied && fallbackSource && source !== fallbackSource) {
-          fallbackApplied = true;
-          setSource(fallbackSource);
-          return;
-        }
         videoEl.removeEventListener("loadeddata", onReady);
         videoEl.removeEventListener("error", onError);
         resolve();
       };
 
       if (videoEl.dataset.src !== source) {
-        setSource(source);
+        videoEl.dataset.src = source;
+        videoEl.src = source;
+        videoEl.load();
       }
 
       if (videoEl.readyState >= 2) {
@@ -1133,33 +1108,22 @@ function initPortfolioPage() {
   function openModal(video) {
     if (!modal || !modalTitle || !modalPlayerWrap || !modalPlayer || !modalLocalPlayer || !modalLocalSource) return;
     modalTitle.textContent = video.title;
-    const primaryVideoUrl = (video.videoUrl || "").trim();
-    const fallbackVideoUrl = (video.fallbackVideoUrl || DEPLOY_FALLBACK_VIDEO).trim();
-    const isLocalVideo = /\.(mp4|mov|webm|ogg)$/i.test(primaryVideoUrl || fallbackVideoUrl);
+    const isLocalVideo = /\.(mp4|mov|webm|ogg)$/i.test(video.videoUrl);
     modalPlayerWrap.classList.toggle("portrait-mode", Boolean(video.isPortrait));
 
     if (isLocalVideo) {
       modalPlayer.classList.add("hidden");
       modalPlayer.src = "";
       modalLocalPlayer.classList.remove("hidden");
-      let fallbackApplied = false;
-      modalLocalPlayer.onerror = () => {
-        if (fallbackApplied || !fallbackVideoUrl || fallbackVideoUrl === primaryVideoUrl) return;
-        fallbackApplied = true;
-        modalLocalSource.src = fallbackVideoUrl;
-        modalLocalPlayer.load();
-        modalLocalPlayer.play().catch(() => {});
-      };
-      modalLocalSource.src = primaryVideoUrl || fallbackVideoUrl;
+      modalLocalSource.src = video.videoUrl;
       modalLocalPlayer.load();
       modalLocalPlayer.play().catch(() => {});
     } else {
       modalLocalPlayer.pause();
       modalLocalPlayer.classList.add("hidden");
       modalLocalSource.src = "";
-      modalLocalPlayer.onerror = null;
       modalPlayer.classList.remove("hidden");
-      modalPlayer.src = `${primaryVideoUrl}?autoplay=1`;
+      modalPlayer.src = `${video.videoUrl}?autoplay=1`;
     }
 
     modal.classList.add("active");
@@ -1173,7 +1137,6 @@ function initPortfolioPage() {
     modalPlayerWrap.classList.remove("portrait-mode");
     modalPlayer.src = "";
     modalLocalPlayer.pause();
-    modalLocalPlayer.onerror = null;
     modalLocalSource.src = "";
     modalLocalPlayer.load();
   }
