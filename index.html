@@ -298,120 +298,53 @@
       </div>
     </section>
 
-    <section class="section creator-hub-section" id="creatorHub">
+    <section class="section studio-pulse-section" id="studioPulse">
       <div class="container reveal reveal-fade-up">
-        <div class="section-head creator-hub-head">
-          <p class="kicker">Creator Hub</p>
-          <h2>Creator Hub</h2>
-          <p>Explore our latest work, follow our creative journey, or contact us for collaboration.</p>
+        <div class="section-head studio-pulse-head">
+          <p class="kicker">Studio Pulse</p>
+          <h2>What Working With আayna Feels Like</h2>
+          <p>We build cinematic short-form stories with a clear process, fast collaboration, and visuals that stay in memory.</p>
         </div>
 
-        <div class="creator-hub-grid">
-          <article class="creator-hub-card creator-video-card">
-            <div class="creator-card-head">
-              <div>
-                <p class="creator-card-kicker">YouTube Feature</p>
-                <h3>Latest Film / Reel</h3>
-              </div>
-              <span class="creator-card-pill">Now Playing</span>
+        <div class="studio-pulse-grid">
+          <article class="studio-pulse-card studio-pulse-feature">
+            <p class="studio-pulse-kicker">Current Focus</p>
+            <h3>Emotion-first reels with a short film finish.</h3>
+            <p>From concept notes to final export, every frame is shaped to feel intentional, human, and replay-worthy.</p>
+            <div class="studio-pulse-actions">
+              <a href="featured.html" class="studio-pulse-btn">Explore Featured Work</a>
+              <a href="#booking" class="studio-pulse-btn studio-pulse-btn-secondary">Book a Collaboration</a>
             </div>
-
-            <div class="creator-video-frame">
-              <iframe
-                id="creatorHubYoutubeEmbed"
-                src="https://www.youtube.com/embed/dQw4w9WgXcQ?rel=0"
-                title="Latest film or reel from Aayna"
-                loading="lazy"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowfullscreen>
-              </iframe>
-            </div>
-
-            <a id="creatorHubYoutubeButton" href="https://www.youtube.com/@aaynaproduction" target="_blank" rel="noopener noreferrer" class="creator-hub-btn">
-              Subscribe on YouTube
-            </a>
           </article>
 
-          <article class="creator-hub-card creator-instagram-card">
-            <div class="creator-card-head">
-              <div>
-                <p class="creator-card-kicker">Instagram Showcase</p>
-                <h3>Reels Preview</h3>
-              </div>
-              <span class="creator-card-pill">3 Highlights</span>
-            </div>
-
-            <div class="creator-reel-grid">
-              <a class="creator-reel-tile" href="featured.html" aria-label="Open first featured reel">
-                <img src="images/shesh-sur-thumb.jpg" alt="Shesh Sur reel thumbnail" loading="lazy" />
-                <span class="creator-reel-overlay">
-                  <i class="fa-solid fa-play"></i>
-                </span>
-              </a>
-
-              <a class="creator-reel-tile" href="featured.html" aria-label="Open second featured reel">
-                <img src="images/ogochalo-shohor-thumb.jpg" alt="Ogochalo Shohor reel thumbnail" loading="lazy" />
-                <span class="creator-reel-overlay">
-                  <i class="fa-solid fa-play"></i>
-                </span>
-              </a>
-
-              <a class="creator-reel-tile" href="featured.html" aria-label="Open third featured reel">
-                <img src="images/black-ethnic-thumb.jpg" alt="Black and Ethnic reel thumbnail" loading="lazy" />
-                <span class="creator-reel-overlay">
-                  <i class="fa-solid fa-play"></i>
-                </span>
-              </a>
-            </div>
-
-            <a id="creatorHubInstagramButton" href="https://www.instagram.com/aayna.production/" target="_blank" rel="noopener noreferrer" class="creator-hub-btn creator-hub-btn-secondary">
-              Follow on Instagram
-            </a>
+          <article class="studio-pulse-card studio-pulse-stat">
+            <span class="studio-pulse-value">3</span>
+            <h3>Creators</h3>
+            <p>Direction, acting, cinematography, and editing under one creative roof.</p>
           </article>
 
-          <article class="creator-hub-card creator-contact-card">
-            <div class="creator-card-head">
-              <div>
-                <p class="creator-card-kicker">Collaboration Contact</p>
-                <h3>Start Your Project</h3>
-              </div>
-              <span class="creator-card-pill">Open for Work</span>
-            </div>
+          <article class="studio-pulse-card studio-pulse-stat">
+            <span class="studio-pulse-value">30s</span>
+            <h3>Impact Window</h3>
+            <p>Stories designed to hook fast, hit emotionally, and stay with the audience.</p>
+          </article>
 
-            <form id="creatorHubContactForm" class="creator-contact-form" novalidate>
-              <div class="creator-form-grid">
-                <label class="creator-input-group">
-                  <span>Name</span>
-                  <input id="creatorHubName" type="text" name="name" placeholder="Your name" required />
-                </label>
+          <article class="studio-pulse-card studio-pulse-list-card">
+            <p class="studio-pulse-kicker">Why Brands & Creators Work With Us</p>
+            <ul class="studio-pulse-list">
+              <li>Concepts tailored for reels, promos, and short films</li>
+              <li>Cinematic editing with social-first pacing</li>
+              <li>Visual language shaped for emotion and shareability</li>
+              <li>Flexible collaboration for personal and brand storytelling</li>
+            </ul>
+          </article>
 
-                <label class="creator-input-group">
-                  <span>Email</span>
-                  <input id="creatorHubEmail" type="email" name="email" placeholder="your@email.com" required />
-                </label>
-              </div>
-
-              <label class="creator-input-group">
-                <span>Project Type</span>
-                <select id="creatorHubProjectType" name="projectType" required>
-                  <option value="">Select project type</option>
-                  <option value="Brand Reel">Brand Reel</option>
-                  <option value="Short Film">Short Film</option>
-                  <option value="Creative Shoot">Creative Shoot</option>
-                  <option value="Collaboration">Collaboration</option>
-                </select>
-              </label>
-
-              <label class="creator-input-group">
-                <span>Message</span>
-                <textarea id="creatorHubMessage" name="message" rows="5" placeholder="Tell us about your idea..." required></textarea>
-              </label>
-
-              <div class="creator-contact-actions">
-                <button type="submit" class="creator-hub-btn">Send Message</button>
-                <p id="creatorHubFormSuccess" class="creator-form-success" aria-live="polite"></p>
-              </div>
-            </form>
+          <article class="studio-pulse-card studio-pulse-quote">
+            <p class="studio-pulse-kicker">Creative Promise</p>
+            <blockquote>
+              “We do not just edit clips. We shape moments into stories people want to replay.”
+            </blockquote>
+            <a href="#team" class="studio-pulse-link">Meet the Team</a>
           </article>
         </div>
       </div>
@@ -452,6 +385,10 @@
           <i class="fa-brands fa-youtube" aria-hidden="true"></i>
         </a>
       </div>
+      <a href="mailto:aaynaproduction26@gmail.com" class="footer-email">
+        <i class="fa-regular fa-envelope" aria-hidden="true"></i>
+        <span>aaynaproduction26@gmail.com</span>
+      </a>
       <nav class="footer-links" aria-label="Footer navigation">
         <a href="#booking">Booking</a>
         <a href="#collaboration">Collaboration</a>
