@@ -937,23 +937,15 @@ function initCinematicFooter() {
   footerSections.forEach((footer) => {
     const typedCredit = footer.querySelector(".typed-credit");
     const typedText = (typedCredit?.dataset.text || typedCredit?.textContent || "").trim();
-    let hasTyped = false;
 
-    const runTyping = () => {
-      if (!typedCredit || hasTyped || !typedText) return;
-      hasTyped = true;
-      typedCredit.textContent = "";
-      let index = 0;
-      const timer = setInterval(() => {
-        typedCredit.textContent += typedText.charAt(index);
-        index += 1;
-        if (index >= typedText.length) clearInterval(timer);
-      }, 42);
+    const renderCredit = () => {
+      if (!typedCredit || !typedText) return;
+      typedCredit.textContent = typedText;
     };
 
     if (!("IntersectionObserver" in window)) {
       footer.classList.add("in-view");
-      runTyping();
+      renderCredit();
       return;
     }
 
@@ -963,7 +955,7 @@ function initCinematicFooter() {
         entries.forEach((entry) => {
           if (!entry.isIntersecting) return;
           footer.classList.add("in-view");
-          runTyping();
+          renderCredit();
           footerObserver.unobserve(entry.target);
         });
       },
