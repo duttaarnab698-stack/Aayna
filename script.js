@@ -88,6 +88,13 @@ const heroReelVideos = [
   { src: "videos/black-ethnic.mp4", thumb: "images/black-ethnic-thumb.jpg" }
 ];
 
+// Creator Hub links. Replace these later with your final channel URLs and latest video ID.
+const creatorHubConfig = {
+  youtubeVideoId: "dQw4w9WgXcQ",
+  youtubeChannelUrl: "https://www.youtube.com/@aaynaproduction",
+  instagramUrl: "https://www.instagram.com/aayna_production?igsh=eHNsYjZsNXhvdGx1"
+};
+
 let activeCategory = "All";
 let searchTerm = "";
 let pendingProtectedAction = null;
@@ -1519,10 +1526,56 @@ function initStandaloneLoginPage() {
   });
 }
 
+function initCreatorHubSection() {
+  const youtubeEmbed = document.getElementById("creatorHubYoutubeEmbed");
+  const youtubeButton = document.getElementById("creatorHubYoutubeButton");
+  const instagramButton = document.getElementById("creatorHubInstagramButton");
+  const contactForm = document.getElementById("creatorHubContactForm");
+  const successMessage = document.getElementById("creatorHubFormSuccess");
+
+  if (youtubeEmbed && creatorHubConfig.youtubeVideoId) {
+    youtubeEmbed.src = `https://www.youtube.com/embed/${creatorHubConfig.youtubeVideoId}?rel=0`;
+  }
+
+  if (youtubeButton && creatorHubConfig.youtubeChannelUrl) {
+    youtubeButton.href = creatorHubConfig.youtubeChannelUrl;
+  }
+
+  if (instagramButton && creatorHubConfig.instagramUrl) {
+    instagramButton.href = creatorHubConfig.instagramUrl;
+  }
+
+  contactForm?.addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    const name = document.getElementById("creatorHubName")?.value.trim();
+    const email = document.getElementById("creatorHubEmail")?.value.trim();
+    const projectType = document.getElementById("creatorHubProjectType")?.value.trim();
+    const message = document.getElementById("creatorHubMessage")?.value.trim();
+
+    if (!name || !email || !projectType || !message) {
+      if (successMessage) {
+        successMessage.textContent = "Please fill in all fields before sending.";
+      }
+      return;
+    }
+
+    contactForm.reset();
+    if (successMessage) {
+      successMessage.textContent = "Your message has been sent successfully.";
+    }
+    showToast("Your message has been sent successfully.");
+
+    clearTimeout(initCreatorHubSection.successTimer);
+    initCreatorHubSection.successTimer = setTimeout(() => {
+      if (successMessage) successMessage.textContent = "";
+    }, 3200);
+  });
+}
+
 function initPortfolioPage() {
   initPageLoader();
   initFloatingParticles();
-  initCustomCursor();
 
   const videoGrid = document.getElementById("videoGrid");
   const hasVideoGrid = Boolean(videoGrid);
@@ -1552,6 +1605,7 @@ function initPortfolioPage() {
   initPaymentBookingSection();
   initHeroBackground();
   initFeaturedReel();
+  initCreatorHubSection();
   if (!uiFxInitialized) {
     initGlobalClickRipple();
     uiFxInitialized = true;

@@ -298,6 +298,125 @@
       </div>
     </section>
 
+    <section class="section creator-hub-section" id="creatorHub">
+      <div class="container reveal reveal-fade-up">
+        <div class="section-head creator-hub-head">
+          <p class="kicker">Creator Hub</p>
+          <h2>Creator Hub</h2>
+          <p>Explore our latest work, follow our creative journey, or contact us for collaboration.</p>
+        </div>
+
+        <div class="creator-hub-grid">
+          <article class="creator-hub-card creator-video-card">
+            <div class="creator-card-head">
+              <div>
+                <p class="creator-card-kicker">YouTube Feature</p>
+                <h3>Latest Film / Reel</h3>
+              </div>
+              <span class="creator-card-pill">Now Playing</span>
+            </div>
+
+            <div class="creator-video-frame">
+              <iframe
+                id="creatorHubYoutubeEmbed"
+                src="https://www.youtube.com/embed/dQw4w9WgXcQ?rel=0"
+                title="Latest film or reel from Aayna"
+                loading="lazy"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen>
+              </iframe>
+            </div>
+
+            <a id="creatorHubYoutubeButton" href="https://www.youtube.com/@aaynaproduction" target="_blank" rel="noopener noreferrer" class="creator-hub-btn">
+              Subscribe on YouTube
+            </a>
+          </article>
+
+          <article class="creator-hub-card creator-instagram-card">
+            <div class="creator-card-head">
+              <div>
+                <p class="creator-card-kicker">Instagram Showcase</p>
+                <h3>Reels Preview</h3>
+              </div>
+              <span class="creator-card-pill">3 Highlights</span>
+            </div>
+
+            <div class="creator-reel-grid">
+              <a class="creator-reel-tile" href="featured.html" aria-label="Open first featured reel">
+                <img src="images/shesh-sur-thumb.jpg" alt="Shesh Sur reel thumbnail" loading="lazy" />
+                <span class="creator-reel-overlay">
+                  <i class="fa-solid fa-play"></i>
+                </span>
+              </a>
+
+              <a class="creator-reel-tile" href="featured.html" aria-label="Open second featured reel">
+                <img src="images/ogochalo-shohor-thumb.jpg" alt="Ogochalo Shohor reel thumbnail" loading="lazy" />
+                <span class="creator-reel-overlay">
+                  <i class="fa-solid fa-play"></i>
+                </span>
+              </a>
+
+              <a class="creator-reel-tile" href="featured.html" aria-label="Open third featured reel">
+                <img src="images/black-ethnic-thumb.jpg" alt="Black and Ethnic reel thumbnail" loading="lazy" />
+                <span class="creator-reel-overlay">
+                  <i class="fa-solid fa-play"></i>
+                </span>
+              </a>
+            </div>
+
+            <a id="creatorHubInstagramButton" href="https://www.instagram.com/aayna.production/" target="_blank" rel="noopener noreferrer" class="creator-hub-btn creator-hub-btn-secondary">
+              Follow on Instagram
+            </a>
+          </article>
+
+          <article class="creator-hub-card creator-contact-card">
+            <div class="creator-card-head">
+              <div>
+                <p class="creator-card-kicker">Collaboration Contact</p>
+                <h3>Start Your Project</h3>
+              </div>
+              <span class="creator-card-pill">Open for Work</span>
+            </div>
+
+            <form id="creatorHubContactForm" class="creator-contact-form" novalidate>
+              <div class="creator-form-grid">
+                <label class="creator-input-group">
+                  <span>Name</span>
+                  <input id="creatorHubName" type="text" name="name" placeholder="Your name" required />
+                </label>
+
+                <label class="creator-input-group">
+                  <span>Email</span>
+                  <input id="creatorHubEmail" type="email" name="email" placeholder="your@email.com" required />
+                </label>
+              </div>
+
+              <label class="creator-input-group">
+                <span>Project Type</span>
+                <select id="creatorHubProjectType" name="projectType" required>
+                  <option value="">Select project type</option>
+                  <option value="Brand Reel">Brand Reel</option>
+                  <option value="Short Film">Short Film</option>
+                  <option value="Creative Shoot">Creative Shoot</option>
+                  <option value="Collaboration">Collaboration</option>
+                </select>
+              </label>
+
+              <label class="creator-input-group">
+                <span>Message</span>
+                <textarea id="creatorHubMessage" name="message" rows="5" placeholder="Tell us about your idea..." required></textarea>
+              </label>
+
+              <div class="creator-contact-actions">
+                <button type="submit" class="creator-hub-btn">Send Message</button>
+                <p id="creatorHubFormSuccess" class="creator-form-success" aria-live="polite"></p>
+              </div>
+            </form>
+          </article>
+        </div>
+      </div>
+    </section>
+
     <section class="section final-cta-section">
       <div class="container final-cta-wrap reveal reveal-zoom">
         <h2>Ready to Create Something Amazing?</h2>
@@ -325,6 +444,14 @@
         <span class="typed-credit" data-text="Built with passion by Arnab ✦ Debonkita ✦ Sanket">Built with passion by Arnab ✦ Debonkita ✦ Sanket</span>
         <span class="typing-caret" aria-hidden="true"></span>
       </p>
+      <div class="footer-socials" aria-label="Social media links">
+        <a href="https://www.instagram.com/aayna_production?igsh=eHNsYjZsNXhvdGx1" target="_blank" rel="noopener noreferrer" aria-label="Follow Aayna on Instagram">
+          <i class="fa-brands fa-instagram" aria-hidden="true"></i>
+        </a>
+        <a href="https://www.youtube.com/@aaynaproduction" target="_blank" rel="noopener noreferrer" aria-label="Subscribe to Aayna on YouTube">
+          <i class="fa-brands fa-youtube" aria-hidden="true"></i>
+        </a>
+      </div>
       <nav class="footer-links" aria-label="Footer navigation">
         <a href="#booking">Booking</a>
         <a href="#collaboration">Collaboration</a>
