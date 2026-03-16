@@ -2121,7 +2121,7 @@ function initAdminDashboard() {
     const username = document.getElementById("adminUsername")?.value.trim();
     const password = document.getElementById("adminPassword")?.value.trim();
 
-    if (username !== "admin" || password !== "aayna123") {
+    if (username !== "24155383@kiit.ac.in" || password !== "123456") {
       loginError.textContent = "Invalid admin username or password.";
       return;
     }
