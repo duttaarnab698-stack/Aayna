@@ -92,6 +92,9 @@ let activeCategory = "All";
 let searchTerm = "";
 let pendingProtectedAction = null;
 let uiFxInitialized = false;
+let cinematicCursorInitialized = false;
+let particlesInitialized = false;
+let pageLoaderInitialized = false;
 
 function executePendingAction() {
   if (!pendingProtectedAction) return;
@@ -718,7 +721,7 @@ function initAuthModal() {
 // -------------------------
 function createVideoCard(video) {
   const card = document.createElement("article");
-  card.className = "video-card reveal";
+  card.className = "video-card reveal reveal-zoom watch-cursor-target";
   const thumbClass = video.id === 11 ? "contain-thumb" : "";
   card.innerHTML = `
     <div class="video-thumb preview-media">
@@ -736,11 +739,12 @@ function createVideoCard(video) {
 
 function createFeaturedCard(item) {
   const card = document.createElement("article");
-  card.className = "featured-card reveal";
+  card.className = "featured-card reveal reveal-fade-up watch-cursor-target";
   card.innerHTML = `
     <div class="preview-media">
       <img src="${item.thumbnail}" alt="${item.title} thumbnail" loading="lazy" />
       <video class="preview-video" src="${item.videoUrl}" muted loop playsinline preload="metadata"></video>
+      <div class="play-badge"><span>&#9658;</span></div>
     </div>
     <div class="featured-meta">
       <h4>${item.title}</h4>
@@ -793,7 +797,7 @@ function initGlobalClickRipple() {
 }
 
 function observeRevealElements() {
-  const revealElements = document.querySelectorAll(".reveal");
+  const revealElements = document.querySelectorAll(".reveal, [data-reveal]");
   if (!revealElements.length || !("IntersectionObserver" in window)) return;
 
   const observer = new IntersectionObserver(
@@ -805,11 +809,490 @@ function observeRevealElements() {
         }
       });
     },
-    { threshold: 0.12 }
+    {
+      threshold: 0.14,
+      rootMargin: "0px 0px -8% 0px"
+    }
   );
 
   revealElements.forEach((el) => {
     if (!el.classList.contains("show")) observer.observe(el);
+  });
+}
+
+function initPageLoader() {
+  if (pageLoaderInitialized) return;
+  if (document.body?.dataset.page === "login" || document.body?.dataset.page === "register") return;
+
+  pageLoaderInitialized = true;
+  document.body.classList.add("is-loading");
+
+  // Build a lightweight full-screen intro loader with two timed text beats.
+  const loader = document.createElement("div");
+  loader.className = "site-loader";
+  loader.innerHTML = `
+    <div class="loader-inner">
+      <span class="loader-line">AAYNA presents</span>
+      <span class="loader-line">Creative Stories in Motion</span>
+    </div>
+  `;
+  document.body.appendChild(loader);
+
+  const [lineOne, lineTwo] = loader.querySelectorAll(".loader-line");
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const holdDelay = prefersReducedMotion ? 750 : 2000;
+
+  requestAnimationFrame(() => {
+    lineOne?.classList.add("is-active");
+  });
+
+  setTimeout(() => {
+    lineOne?.classList.remove("is-active");
+    lineTwo?.classList.add("is-active");
+  }, 900);
+
+  setTimeout(() => {
+    loader.classList.add("is-hidden");
+    document.body.classList.remove("is-loading");
+    setTimeout(() => loader.remove(), 640);
+  }, 900 + holdDelay);
+}
+
+function initFloatingParticles() {
+  if (particlesInitialized) return;
+  if (document.body?.dataset.page === "login" || document.body?.dataset.page === "register") return;
+
+  particlesInitialized = true;
+  const particles = document.createElement("div");
+  particles.className = "floating-particles";
+  particles.setAttribute("aria-hidden", "true");
+  particles.innerHTML = `
+    <span class="particle"></span><span class="particle"></span><span class="particle"></span><span class="particle"></span><span class="particle"></span>
+    <span class="particle"></span><span class="particle"></span><span class="particle"></span><span class="particle"></span><span class="particle"></span>
+  `;
+  document.body.appendChild(particles);
+}
+
+function initCustomCursor() {
+  if (cinematicCursorInitialized) return;
+  if (!window.matchMedia("(pointer: fine)").matches) return;
+
+  cinematicCursorInitialized = true;
+  document.body.classList.add("has-custom-cursor");
+
+  const cursor = document.createElement("div");
+  cursor.className = "custom-cursor";
+  cursor.innerHTML = `<span class="custom-cursor-label">Watch Reel</span>`;
+  document.body.appendChild(cursor);
+
+  document.addEventListener("pointermove", (event) => {
+    cursor.style.left = `${event.clientX}px`;
+    cursor.style.top = `${event.clientY}px`;
+    cursor.classList.add("visible");
+  });
+
+  document.addEventListener("pointerleave", () => cursor.classList.remove("visible"));
+
+  // Expand cursor and show "Watch Reel" on media-focused cards/players.
+  document.addEventListener("mouseover", (event) => {
+    const target = event.target.closest(".watch-cursor-target, .video-card, .featured-card, .featured-reel-player");
+    cursor.classList.toggle("cursor-watch", Boolean(target));
+  });
+}
+
+function initFeaturedReel() {
+  const reelPlayer = document.getElementById("featuredReelPlayer");
+  const reelVideo = document.getElementById("featuredReelVideo");
+  const reelPlayBtn = document.getElementById("featuredReelPlay");
+  if (!reelPlayer || !reelVideo || !reelPlayBtn) return;
+
+  const syncState = () => {
+    reelPlayer.classList.toggle("is-playing", !reelVideo.paused);
+    const icon = reelPlayBtn.querySelector("i");
+    const label = reelPlayBtn.querySelector("span");
+    if (icon) icon.className = reelVideo.paused ? "fa-solid fa-play" : "fa-solid fa-pause";
+    if (label) label.textContent = reelVideo.paused ? "Play Reel" : "Pause";
+  };
+
+  const togglePlayback = () => {
+    if (reelVideo.paused) {
+      reelVideo.play().catch(() => {});
+    } else {
+      reelVideo.pause();
+    }
+  };
+
+  reelPlayBtn.addEventListener("click", togglePlayback);
+  reelVideo.addEventListener("click", togglePlayback);
+  reelVideo.addEventListener("play", syncState);
+  reelVideo.addEventListener("pause", syncState);
+  reelVideo.addEventListener("ended", syncState);
+  syncState();
+}
+
+function initCinematicFooter() {
+  const footerSections = document.querySelectorAll(".footer-cinematic");
+  if (!footerSections.length) return;
+
+  footerSections.forEach((footer) => {
+    const typedCredit = footer.querySelector(".typed-credit");
+    const typedText = (typedCredit?.dataset.text || typedCredit?.textContent || "").trim();
+    let hasTyped = false;
+
+    const runTyping = () => {
+      if (!typedCredit || hasTyped || !typedText) return;
+      hasTyped = true;
+      typedCredit.textContent = "";
+      let index = 0;
+      const timer = setInterval(() => {
+        typedCredit.textContent += typedText.charAt(index);
+        index += 1;
+        if (index >= typedText.length) clearInterval(timer);
+      }, 42);
+    };
+
+    if (!("IntersectionObserver" in window)) {
+      footer.classList.add("in-view");
+      runTyping();
+      return;
+    }
+
+    footer.classList.add("observe-ready");
+    const footerObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          footer.classList.add("in-view");
+          runTyping();
+          footerObserver.unobserve(entry.target);
+        });
+      },
+      { threshold: 0.2 }
+    );
+
+    footerObserver.observe(footer);
+  });
+}
+
+function initPaymentBookingSection() {
+  const copyUpiBtn = document.getElementById("copyUpiBtn");
+  const upiIdEl = document.getElementById("studioUpiId");
+  const copyUpiNote = document.getElementById("copyUpiNote");
+  const paymentPurposeSelect = document.getElementById("paymentPurposeSelect");
+  const bookingEmailInput = document.getElementById("bookingEmail");
+  const bookingEmailError = document.getElementById("bookingEmailError");
+  const generateQrBtn = document.getElementById("generateQrBtn");
+  const qrPaymentDoneBtn = document.getElementById("qrPaymentDoneBtn");
+  const qrValidityText = document.getElementById("qrValidityText");
+  const qrHolder = document.getElementById("qrHolder");
+  const qrImage = document.getElementById("paymentQrImage");
+  const statusBox = document.getElementById("paymentStatusBox");
+  const statusText = document.getElementById("paymentStatusText");
+  const razorpayPayBtn = document.getElementById("razorpayPayBtn");
+  const successModal = document.getElementById("bookingSuccessModal");
+  const closeSuccessModalBtn = document.getElementById("closeBookingSuccessModal");
+  const successBookingId = document.getElementById("successBookingId");
+  const successBookingEmail = document.getElementById("successBookingEmail");
+  const bookingSuccessNote = document.getElementById("bookingSuccessNote");
+  const whatsappConfirmBtn = document.getElementById("whatsappConfirmBtn");
+  const downloadReceiptBtn = document.getElementById("downloadReceiptBtn");
+
+  if (!statusBox || !statusText || !razorpayPayBtn) return;
+  const fixedAmount = "10.00";
+  let latestBooking = null;
+  let qrExpiryAt = 0;
+  let qrTimer = null;
+
+  const resetStatus = () => {
+    statusBox.classList.remove("is-processing", "is-success");
+  };
+
+  const validateEmail = () => {
+    const email = (bookingEmailInput?.value || "").trim().toLowerCase();
+    if (!isValidEmail(email)) {
+      if (bookingEmailError) bookingEmailError.textContent = "Enter a valid email address before payment.";
+      bookingEmailInput?.classList.add("field-error");
+      bookingEmailInput?.focus();
+      return null;
+    }
+    if (bookingEmailError) bookingEmailError.textContent = "";
+    bookingEmailInput?.classList.remove("field-error");
+    return email;
+  };
+
+  const openSuccessModal = () => {
+    if (!successModal) return;
+    successModal.classList.add("open");
+    successModal.setAttribute("aria-hidden", "false");
+  };
+
+  const closeSuccessModal = () => {
+    if (!successModal) return;
+    successModal.classList.remove("open");
+    successModal.setAttribute("aria-hidden", "true");
+  };
+
+  const buildUpiLink = () => {
+    const upiId = upiIdEl?.textContent?.trim() || "";
+    const purpose = paymentPurposeSelect?.value || "Project Booking";
+    return `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent("Aayna Studio")}&am=${fixedAmount}&cu=INR&tn=${encodeURIComponent(purpose)}`;
+  };
+
+  const generateBookingId = () => {
+    const year = new Date().getFullYear();
+    const code = String(Math.floor(1000 + Math.random() * 9000));
+    return `AAYNA-${year}-${code}`;
+  };
+
+  const clearQrTimer = () => {
+    clearInterval(qrTimer);
+    qrTimer = null;
+  };
+
+  const expireQr = () => {
+    qrExpiryAt = 0;
+    clearQrTimer();
+    if (qrHolder) qrHolder.classList.add("qr-hidden");
+    if (qrImage) qrImage.src = "";
+    if (qrValidityText) qrValidityText.textContent = "QR expired. Generate again.";
+  };
+
+  const updateQrCountdown = () => {
+    if (!qrExpiryAt) return;
+    const remainingMs = qrExpiryAt - Date.now();
+    if (remainingMs <= 0) {
+      expireQr();
+      return;
+    }
+    const totalSeconds = Math.ceil(remainingMs / 1000);
+    const mins = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
+    const secs = String(totalSeconds % 60).padStart(2, "0");
+    if (qrValidityText) qrValidityText.textContent = `QR valid for ${mins}:${secs}`;
+  };
+
+  const refreshQrCode = () => {
+    if (!qrImage || !qrExpiryAt || Date.now() > qrExpiryAt) return;
+    const upiLink = buildUpiLink();
+    qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(upiLink)}`;
+  };
+
+  const finalizeSuccessWithBooking = (booking) => {
+    if (!booking) return;
+    latestBooking = {
+      bookingId: booking.bookingId,
+      email: booking.email,
+      appName: booking.appName || "Razorpay",
+      purpose: booking.purpose,
+      amount: String(booking.amount || fixedAmount),
+      upiId: booking.upiId || (upiIdEl?.textContent?.trim() || ""),
+      createdAt: new Date(booking.createdAt || Date.now())
+    };
+
+    resetStatus();
+    statusBox.classList.add("is-success");
+    statusText.textContent = "Payment Initiated Successfully";
+    if (razorpayPayBtn) razorpayPayBtn.disabled = false;
+
+    if (successBookingId) successBookingId.textContent = latestBooking.bookingId;
+    if (successBookingEmail) successBookingEmail.textContent = latestBooking.email;
+    if (bookingSuccessNote) bookingSuccessNote.textContent = "Confirmation has been sent to your email.";
+    if (whatsappConfirmBtn) {
+      const msg = `Hello, I have completed my booking. Booking ID: ${latestBooking.bookingId}`;
+      whatsappConfirmBtn.href = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+    }
+    openSuccessModal();
+  };
+
+  const sendBookingConfirmationMail = async (booking) => {
+    try {
+      await postJsonWithFallback("/api/bookings/confirm", {
+        email: booking.email,
+        bookingId: booking.bookingId,
+        purpose: booking.purpose,
+        amount: Number(booking.amount || fixedAmount),
+        paymentMethod: booking.appName || "Payment"
+      });
+      if (bookingSuccessNote) bookingSuccessNote.textContent = "Confirmation has been sent to your email.";
+    } catch (error) {
+      if (bookingSuccessNote) bookingSuccessNote.textContent = "Booking saved, but email could not be sent right now.";
+      showToast(error?.message || "Confirmation email failed.");
+    }
+  };
+
+  paymentPurposeSelect?.addEventListener("change", refreshQrCode);
+  bookingEmailInput?.addEventListener("input", () => {
+    if (bookingEmailError) bookingEmailError.textContent = "";
+    bookingEmailInput.classList.remove("field-error");
+  });
+  generateQrBtn?.addEventListener("click", () => {
+    const email = validateEmail();
+    if (!email) return;
+
+    qrExpiryAt = Date.now() + (5 * 60 * 1000);
+    refreshQrCode();
+    qrHolder?.classList.remove("qr-hidden");
+    updateQrCountdown();
+    clearQrTimer();
+    qrTimer = setInterval(updateQrCountdown, 1000);
+  });
+  qrPaymentDoneBtn?.addEventListener("click", async () => {
+    const email = validateEmail();
+    if (!email) return;
+    if (!qrExpiryAt || Date.now() > qrExpiryAt) {
+      if (qrValidityText) qrValidityText.textContent = "QR expired. Generate again.";
+      return;
+    }
+
+    const booking = {
+      bookingId: generateBookingId(),
+      email,
+      appName: "QR Payment",
+      purpose: paymentPurposeSelect?.value || "Booking",
+      amount: fixedAmount,
+      upiId: upiIdEl?.textContent?.trim() || "",
+      createdAt: new Date()
+    };
+
+    finalizeSuccessWithBooking(booking);
+    await sendBookingConfirmationMail(booking);
+  });
+  closeSuccessModalBtn?.addEventListener("click", closeSuccessModal);
+  successModal?.addEventListener("click", (event) => {
+    if (event.target === successModal) closeSuccessModal();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeSuccessModal();
+  });
+
+  copyUpiBtn?.addEventListener("click", async () => {
+    const upiText = upiIdEl?.textContent?.trim() || "";
+    if (!upiText) return;
+
+    try {
+      // Use modern clipboard API first; fallback keeps support for older browsers.
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(upiText);
+      } else {
+        const temp = document.createElement("textarea");
+        temp.value = upiText;
+        temp.setAttribute("readonly", "");
+        temp.style.position = "absolute";
+        temp.style.left = "-9999px";
+        document.body.appendChild(temp);
+        temp.select();
+        document.execCommand("copy");
+        temp.remove();
+      }
+      if (copyUpiNote) copyUpiNote.textContent = "UPI ID copied successfully.";
+    } catch {
+      if (copyUpiNote) copyUpiNote.textContent = "Copy failed. Please copy manually.";
+    }
+
+    clearTimeout(copyUpiBtn.copyTimer);
+    copyUpiBtn.copyTimer = setTimeout(() => {
+      if (copyUpiNote) copyUpiNote.textContent = "";
+    }, 2200);
+  });
+
+  razorpayPayBtn?.addEventListener("click", async () => {
+    const email = validateEmail();
+    if (!email) return;
+    if (typeof window.Razorpay === "undefined") {
+      statusText.textContent = "Razorpay is unavailable. Please try again.";
+      return;
+    }
+
+    const purpose = paymentPurposeSelect?.value || "Booking";
+    try {
+      resetStatus();
+      statusBox.classList.add("is-processing");
+      statusText.textContent = "Processing Payment...";
+      razorpayPayBtn.disabled = true;
+
+      const orderResp = await postJsonWithFallback("/api/payments/order", {
+        email,
+        purpose,
+        amount: Number(fixedAmount)
+      });
+
+      const options = {
+        key: orderResp.keyId,
+        amount: orderResp.order.amount,
+        currency: orderResp.order.currency,
+        name: "AAYNA Studio",
+        description: `${purpose} Booking Token`,
+        order_id: orderResp.order.id,
+        prefill: { email },
+        notes: {
+          purpose,
+          booking_token: fixedAmount
+        },
+        theme: { color: "#18f2ff" },
+        handler: async (response) => {
+          try {
+            const verifyResp = await postJsonWithFallback("/api/payments/verify", {
+              email,
+              purpose,
+              amount: Number(fixedAmount),
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature
+            });
+            finalizeSuccessWithBooking(verifyResp.booking);
+            await sendBookingConfirmationMail(verifyResp.booking);
+          } catch (err) {
+            resetStatus();
+            statusText.textContent = err?.message || "Payment verification failed.";
+            razorpayPayBtn.disabled = false;
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            resetStatus();
+            statusText.textContent = "Payment was cancelled.";
+            razorpayPayBtn.disabled = false;
+          }
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (error) {
+      resetStatus();
+      statusText.textContent = error?.message || "Unable to start Razorpay payment.";
+      razorpayPayBtn.disabled = false;
+    }
+  });
+
+  downloadReceiptBtn?.addEventListener("click", () => {
+    if (!latestBooking) return;
+
+    // Generate a lightweight, downloadable receipt for the completed booking.
+    const issuedAt = latestBooking.createdAt.toLocaleString();
+    const receiptText = [
+      "AAYNA Creative Studio - Booking Receipt",
+      "---------------------------------------",
+      `Booking ID: ${latestBooking.bookingId}`,
+      `Email: ${latestBooking.email}`,
+      `Purpose: ${latestBooking.purpose}`,
+      `Paid Via: ${latestBooking.appName}`,
+      `Amount: INR ${latestBooking.amount}`,
+      `UPI ID: ${latestBooking.upiId}`,
+      `Issued On: ${issuedAt}`,
+      "",
+      "Status: Project Slot Reserved",
+      "Confirmation has been sent to your email."
+    ].join("\n");
+
+    const blob = new Blob([receiptText], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${latestBooking.bookingId}-receipt.txt`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   });
 }
 
@@ -1037,6 +1520,10 @@ function initStandaloneLoginPage() {
 }
 
 function initPortfolioPage() {
+  initPageLoader();
+  initFloatingParticles();
+  initCustomCursor();
+
   const videoGrid = document.getElementById("videoGrid");
   const hasVideoGrid = Boolean(videoGrid);
 
@@ -1062,7 +1549,9 @@ function initPortfolioPage() {
   const featuredGrid = document.getElementById("featuredGrid");
 
   renderNavbarAuth();
+  initPaymentBookingSection();
   initHeroBackground();
+  initFeaturedReel();
   if (!uiFxInitialized) {
     initGlobalClickRipple();
     uiFxInitialized = true;
@@ -1367,9 +1856,303 @@ function initPortfolioPage() {
   }
   renderFeaturedCreations();
   observeRevealElements();
+  initCinematicFooter();
 }
 
+// -------------------------
+// Visitor analytics + admin dashboard
+// -------------------------
+const VISITOR_ANALYTICS_KEY = "AAYNA_VISITOR_ANALYTICS";
+const VISITOR_SESSION_KEY = "AAYNA_VISITOR_SESSION_ID";
+const ADMIN_SESSION_KEY = "AAYNA_ADMIN_AUTH";
+
+function getVisitorAnalytics() {
+  return getJSON(VISITOR_ANALYTICS_KEY, {
+    totalVisits: 0,
+    totalPageViews: 0,
+    lastVisitId: 0,
+    dailyVisits: {},
+    sessions: {},
+    visitLog: []
+  });
+}
+
+function setVisitorAnalytics(data) {
+  setJSON(VISITOR_ANALYTICS_KEY, data);
+}
+
+function getCurrentPageKey() {
+  const bodyPage = document.body?.dataset?.page;
+  if (bodyPage) return bodyPage.toLowerCase();
+
+  const fileName = window.location.pathname.split("/").pop() || "index.html";
+  return fileName.replace(".html", "").toLowerCase() || "index";
+}
+
+function getDateKey(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function getReadableDate(date) {
+  return date.toLocaleDateString("en-IN", {
+    year: "numeric",
+    month: "short",
+    day: "numeric"
+  });
+}
+
+function getReadableTime(date) {
+  return date.toLocaleTimeString("en-IN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit"
+  });
+}
+
+function getVisitorSessionId() {
+  let sessionId = sessionStorage.getItem(VISITOR_SESSION_KEY);
+  if (sessionId) return sessionId;
+
+  sessionId = `SID-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+  sessionStorage.setItem(VISITOR_SESSION_KEY, sessionId);
+  return sessionId;
+}
+
+function shouldTrackVisitorPage() {
+  const excludedPages = new Set(["admin", "dashboard", "login", "register"]);
+  return !excludedPages.has(getCurrentPageKey());
+}
+
+function trackVisitor() {
+  if (!shouldTrackVisitorPage()) return;
+
+  const analytics = getVisitorAnalytics();
+  const now = new Date();
+  const dateKey = getDateKey(now);
+  const pageKey = getCurrentPageKey();
+  const sessionId = getVisitorSessionId();
+  const isNewSession = !analytics.sessions[sessionId];
+  const currentSession = analytics.sessions[sessionId] || {
+    sessionId,
+    firstSeen: now.toISOString(),
+    lastActive: now.toISOString(),
+    visitCount: 0,
+    pages: []
+  };
+
+  currentSession.visitCount += 1;
+  currentSession.lastActive = now.toISOString();
+  if (!currentSession.pages.includes(pageKey)) {
+    currentSession.pages.push(pageKey);
+  }
+
+  analytics.totalPageViews += 1;
+  if (isNewSession) {
+    analytics.totalVisits += 1;
+    analytics.dailyVisits[dateKey] = (analytics.dailyVisits[dateKey] || 0) + 1;
+  }
+  analytics.lastVisitId += 1;
+  analytics.sessions[sessionId] = currentSession;
+  analytics.visitLog.unshift({
+    id: analytics.lastVisitId,
+    dateKey,
+    dateLabel: getReadableDate(now),
+    timeLabel: getReadableTime(now),
+    sessionId,
+    page: pageKey,
+    sessionVisit: currentSession.visitCount,
+    timestamp: now.toISOString()
+  });
+
+  // Keep the latest rows so the admin table stays fast.
+  analytics.visitLog = analytics.visitLog.slice(0, 250);
+  setVisitorAnalytics(analytics);
+}
+
+function getActiveSessionCount(analytics) {
+  const now = Date.now();
+  const activeWindow = 30 * 60 * 1000;
+
+  return Object.values(analytics.sessions || {}).filter((session) => {
+    return now - new Date(session.lastActive).getTime() <= activeWindow;
+  }).length;
+}
+
+function setAdminAuthState(isLoggedIn) {
+  if (isLoggedIn) {
+    sessionStorage.setItem(ADMIN_SESSION_KEY, "true");
+  } else {
+    sessionStorage.removeItem(ADMIN_SESSION_KEY);
+  }
+}
+
+function isAdminLoggedIn() {
+  return sessionStorage.getItem(ADMIN_SESSION_KEY) === "true";
+}
+
+function initAdminDashboard() {
+  if (getCurrentPageKey() !== "admin") return;
+
+  const loginView = document.getElementById("adminLoginView");
+  const dashboardView = document.getElementById("adminDashboardView");
+  const loginForm = document.getElementById("adminLoginForm");
+  const loginError = document.getElementById("adminLoginError");
+  const logoutBtn = document.getElementById("adminLogoutBtn");
+  const resetBtn = document.getElementById("resetVisitorDataBtn");
+  const totalVisitorsEl = document.getElementById("totalVisitorsCard");
+  const todayVisitorsEl = document.getElementById("todayVisitorsCard");
+  const activeSessionsEl = document.getElementById("activeSessionsCard");
+  const totalPageViewsEl = document.getElementById("totalPageViewsCard");
+  const tableBody = document.getElementById("visitorTableBody");
+  const emptyState = document.getElementById("visitorEmptyState");
+  const lastUpdated = document.getElementById("adminLastUpdated");
+  const chartCanvas = document.getElementById("visitorChart");
+
+  let visitorChart = null;
+
+  function toggleAdminView() {
+    const loggedIn = isAdminLoggedIn();
+    loginView?.classList.toggle("hidden", loggedIn);
+    dashboardView?.classList.toggle("hidden", !loggedIn);
+  }
+
+  function renderChart(analytics) {
+    if (!chartCanvas || typeof Chart === "undefined") return;
+
+    const labels = Object.keys(analytics.dailyVisits || {}).sort();
+    const values = labels.map((key) => analytics.dailyVisits[key]);
+    const prettyLabels = labels.map((key) => {
+      const date = new Date(`${key}T00:00:00`);
+      return date.toLocaleDateString("en-IN", { month: "short", day: "numeric" });
+    });
+
+    if (visitorChart) {
+      visitorChart.destroy();
+    }
+
+    visitorChart = new Chart(chartCanvas, {
+      type: "line",
+      data: {
+        labels: prettyLabels,
+        datasets: [
+          {
+            label: "Visits",
+            data: values,
+            borderColor: "#42f5ff",
+            backgroundColor: "rgba(66, 245, 255, 0.16)",
+            fill: true,
+            tension: 0.35,
+            pointRadius: 4,
+            pointHoverRadius: 6
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            labels: {
+              color: "#f6f7ff"
+            }
+          }
+        },
+        scales: {
+          x: {
+            ticks: { color: "#b8c0da" },
+            grid: { color: "rgba(255,255,255,0.06)" }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: {
+              color: "#b8c0da",
+              precision: 0
+            },
+            grid: { color: "rgba(255,255,255,0.06)" }
+          }
+        }
+      }
+    });
+  }
+
+  function renderDashboard() {
+    const analytics = getVisitorAnalytics();
+    const todayKey = getDateKey(new Date());
+    const totalVisitors = analytics.totalVisits || 0;
+    const todayVisitors = analytics.dailyVisits?.[todayKey] || 0;
+    const activeSessions = getActiveSessionCount(analytics);
+    const totalPageViews = analytics.totalPageViews || 0;
+    const visitRows = analytics.visitLog || [];
+
+    if (totalVisitorsEl) totalVisitorsEl.textContent = totalVisitors;
+    if (todayVisitorsEl) todayVisitorsEl.textContent = todayVisitors;
+    if (activeSessionsEl) activeSessionsEl.textContent = activeSessions;
+    if (totalPageViewsEl) totalPageViewsEl.textContent = totalPageViews;
+    if (lastUpdated) lastUpdated.textContent = `Last updated: ${getReadableDate(new Date())} ${getReadableTime(new Date())}`;
+
+    if (tableBody) {
+      tableBody.innerHTML = "";
+      visitRows.forEach((visit) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>#${visit.id}</td>
+          <td>${visit.dateLabel}</td>
+          <td>${visit.timeLabel}</td>
+          <td>${visit.sessionId}</td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    if (emptyState) {
+      emptyState.classList.toggle("hidden", visitRows.length > 0);
+    }
+
+    renderChart(analytics);
+  }
+
+  loginForm?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    loginError.textContent = "";
+
+    const username = document.getElementById("adminUsername")?.value.trim();
+    const password = document.getElementById("adminPassword")?.value.trim();
+
+    if (username !== "admin" || password !== "aayna123") {
+      loginError.textContent = "Invalid admin username or password.";
+      return;
+    }
+
+    setAdminAuthState(true);
+    toggleAdminView();
+    renderDashboard();
+  });
+
+  logoutBtn?.addEventListener("click", () => {
+    setAdminAuthState(false);
+    toggleAdminView();
+  });
+
+  resetBtn?.addEventListener("click", () => {
+    const confirmed = window.confirm("Reset all saved visitor data?");
+    if (!confirmed) return;
+
+    localStorage.removeItem(VISITOR_ANALYTICS_KEY);
+    renderDashboard();
+  });
+
+  toggleAdminView();
+  if (isAdminLoggedIn()) {
+    renderDashboard();
+  }
+}
+
+trackVisitor();
 initAuthModal();
 initStandaloneLoginPage();
 initPortfolioPage();
+initAdminDashboard();
 

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard | আayna</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Sora:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body data-page="admin">
+  <div class="bg-glow"></div>
+
+  <main class="admin-shell">
+    <div class="container">
+      <section id="adminLoginView" class="admin-login-card">
+        <span class="admin-login-badge">Secure Admin Access</span>
+        <h1>Visitor Analytics</h1>
+        <p>Login to view the website traffic dashboard for আayna.</p>
+
+        <form id="adminLoginForm" class="admin-login-form" novalidate>
+          <div class="admin-input-wrap">
+            <label for="adminUsername">Username</label>
+            <input id="adminUsername" type="text" placeholder="Enter admin username" required />
+          </div>
+
+          <div class="admin-input-wrap">
+            <label for="adminPassword">Password</label>
+            <input id="adminPassword" type="password" placeholder="Enter admin password" required />
+          </div>
+
+          <p id="adminLoginError" class="admin-login-error" aria-live="polite"></p>
+          <button type="submit" class="admin-login-button">Login to Dashboard</button>
+        </form>
+      </section>
+
+      <section id="adminDashboardView" class="admin-dashboard-panel hidden">
+        <div class="admin-overview-head">
+          <div>
+            <h1>Admin Dashboard</h1>
+            <p>A modern analytics panel for tracking local website visitors.</p>
+            <p id="adminLastUpdated" class="admin-last-updated">Last updated:</p>
+          </div>
+
+          <div class="admin-top-actions">
+            <button id="resetVisitorDataBtn" class="admin-action-btn danger" type="button">Reset Visitor Data</button>
+            <button id="adminLogoutBtn" class="admin-action-btn" type="button">Logout</button>
+          </div>
+        </div>
+
+        <div class="admin-stat-grid">
+          <article class="admin-card">
+            <span class="admin-card-label">Total Visitors</span>
+            <strong id="totalVisitorsCard" class="admin-card-value">0</strong>
+          </article>
+
+          <article class="admin-card">
+            <span class="admin-card-label">Today's Visitors</span>
+            <strong id="todayVisitorsCard" class="admin-card-value">0</strong>
+          </article>
+
+          <article class="admin-card">
+            <span class="admin-card-label">Active Sessions</span>
+            <strong id="activeSessionsCard" class="admin-card-value">0</strong>
+          </article>
+
+          <article class="admin-card">
+            <span class="admin-card-label">Total Page Views</span>
+            <strong id="totalPageViewsCard" class="admin-card-value">0</strong>
+          </article>
+        </div>
+
+        <div class="admin-panel-grid">
+          <section class="admin-chart-card">
+            <div class="admin-card-head">
+              <div>
+                <h2>Visitor Graph</h2>
+                <p>Daily visits shown with Chart.js.</p>
+              </div>
+            </div>
+            <div class="admin-chart-wrap">
+              <canvas id="visitorChart"></canvas>
+            </div>
+          </section>
+
+          <section class="admin-table-card">
+            <div class="admin-card-head">
+              <div>
+                <h2>Visitor Table</h2>
+                <p>Latest visit records saved in LocalStorage.</p>
+              </div>
+            </div>
+
+            <div class="admin-table-wrap">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Visit ID</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Session ID</th>
+                  </tr>
+                </thead>
+                <tbody id="visitorTableBody"></tbody>
+              </table>
+            </div>
+
+            <p id="visitorEmptyState" class="admin-empty-state">No visitor data yet. Open the website to start tracking.</p>
+          </section>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

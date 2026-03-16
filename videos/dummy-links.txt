@@ -1,0 +1,9 @@
+# Dummy video links used in script.js
+https://www.youtube.com/embed/ScMzIvxBSi4
+https://www.youtube.com/embed/tgbNymZ7vqY
+https://www.youtube.com/embed/ysz5S6PUM-U
+https://www.youtube.com/embed/aqz-KE-bpKQ
+https://www.youtube.com/embed/M7lc1UVf-VE
+https://www.youtube.com/embed/jNQXAC9IVRw
+https://www.youtube.com/embed/kXYiU_JCYtU
+https://www.youtube.com/embed/5qap5aO4i9A

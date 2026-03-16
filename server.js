@@ -1,6 +1,8 @@
 require("dotenv").config();
 const express = require("express");
+const crypto = require("crypto");
 const nodemailer = require("nodemailer");
+const Razorpay = require("razorpay");
 const twilio = require("twilio");
 
 const app = express();
@@ -22,9 +24,19 @@ const OTP_MAX_ATTEMPTS = 5;
 
 // In-memory OTP store: restart করলে reset হবে।
 const otpStore = new Map();
+const paymentOrderStore = new Map();
 
 const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((value || "").trim());
 const isIndianPhone = (value) => /^\+91\d{10}$/.test((value || "").trim());
+const isPlaceholderValue = (value) => {
+  const raw = String(value || "").trim().toLowerCase();
+  return (
+    !raw ||
+    raw.includes("your-email@example.com") ||
+    raw.includes("your-email-password-or-app-password") ||
+    raw.includes("xxxxxxxx")
+  );
+};
 
 function parseIdentifier(identifier) {
   const raw = (identifier || "").trim();
@@ -52,7 +64,15 @@ function maskIdentifier(identifier) {
 const hasTwilio = Boolean(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_FROM_NUMBER);
 const twilioClient = hasTwilio ? twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN) : null;
 
-const hasSMTP = Boolean(process.env.SMTP_HOST && process.env.SMTP_PORT && process.env.SMTP_USER && process.env.SMTP_PASS);
+const hasSMTP = Boolean(
+  process.env.SMTP_HOST &&
+  process.env.SMTP_PORT &&
+  process.env.SMTP_USER &&
+  process.env.SMTP_PASS &&
+  !isPlaceholderValue(process.env.SMTP_USER) &&
+  !isPlaceholderValue(process.env.SMTP_PASS)
+);
+const smtpFromAddress = !isPlaceholderValue(process.env.SMTP_FROM) ? process.env.SMTP_FROM : process.env.SMTP_USER;
 const mailTransporter = hasSMTP
   ? nodemailer.createTransport({
       host: process.env.SMTP_HOST,
@@ -62,6 +82,14 @@ const mailTransporter = hasSMTP
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS
       }
+    })
+  : null;
+
+const hasRazorpay = Boolean(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET);
+const razorpayClient = hasRazorpay
+  ? new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET
     })
   : null;
 
@@ -110,7 +138,7 @@ app.post("/api/otp/send", async (req, res) => {
       }
 
       await mailTransporter.sendMail({
-        from: process.env.SMTP_FROM || process.env.SMTP_USER,
+        from: smtpFromAddress,
         to: parsed.value,
         subject: "Your AAYNA OTP",
         text: `Your AAYNA OTP is ${otp}. It is valid for 5 minutes.`,
@@ -161,10 +189,211 @@ app.post("/api/otp/verify", (req, res) => {
   return res.json({ ok: true, message: "OTP verified." });
 });
 
+app.post("/api/payments/order", async (req, res) => {
+  try {
+    if (!razorpayClient || !hasRazorpay) {
+      return res.status(500).json({ ok: false, message: "Razorpay is not configured on server." });
+    }
+
+    const email = String(req.body?.email || "").trim().toLowerCase();
+    const purpose = String(req.body?.purpose || "Project Booking").trim();
+    const amount = Number(req.body?.amount || 0);
+
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ ok: false, message: "Valid email is required." });
+    }
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return res.status(400).json({ ok: false, message: "Invalid amount." });
+    }
+
+    const amountPaise = Math.round(amount * 100);
+    const year = new Date().getFullYear();
+    const bookingId = `AAYNA-${year}-${String(Math.floor(1000 + Math.random() * 9000))}`;
+    const receipt = `aayna_${Date.now()}`;
+
+    const order = await razorpayClient.orders.create({
+      amount: amountPaise,
+      currency: "INR",
+      receipt,
+      notes: {
+        bookingId,
+        purpose,
+        email
+      }
+    });
+
+    paymentOrderStore.set(order.id, {
+      bookingId,
+      email,
+      purpose,
+      amount,
+      createdAt: Date.now()
+    });
+
+    return res.json({
+      ok: true,
+      keyId: process.env.RAZORPAY_KEY_ID,
+      order
+    });
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      message: "Failed to create Razorpay order.",
+      error: error?.message || "Unknown error"
+    });
+  }
+});
+
+app.post("/api/payments/verify", (req, res) => {
+  try {
+    if (!hasRazorpay) {
+      return res.status(500).json({ ok: false, message: "Razorpay is not configured on server." });
+    }
+
+    const email = String(req.body?.email || "").trim().toLowerCase();
+    const purpose = String(req.body?.purpose || "Project Booking").trim();
+    const amount = Number(req.body?.amount || 0);
+    const orderId = String(req.body?.razorpay_order_id || "").trim();
+    const paymentId = String(req.body?.razorpay_payment_id || "").trim();
+    const signature = String(req.body?.razorpay_signature || "").trim();
+
+    if (!orderId || !paymentId || !signature) {
+      return res.status(400).json({ ok: false, message: "Missing Razorpay payment fields." });
+    }
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ ok: false, message: "Valid email is required." });
+    }
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return res.status(400).json({ ok: false, message: "Invalid amount." });
+    }
+
+    const generatedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .update(`${orderId}|${paymentId}`)
+      .digest("hex");
+
+    if (generatedSignature !== signature) {
+      return res.status(400).json({ ok: false, message: "Payment signature verification failed." });
+    }
+
+    const orderMeta = paymentOrderStore.get(orderId);
+    const bookingId = orderMeta?.bookingId || `AAYNA-${new Date().getFullYear()}-${String(Math.floor(1000 + Math.random() * 9000))}`;
+    paymentOrderStore.delete(orderId);
+
+    return res.json({
+      ok: true,
+      booking: {
+        bookingId,
+        email,
+        purpose: orderMeta?.purpose || purpose,
+        amount: orderMeta?.amount || amount,
+        appName: "Razorpay",
+        createdAt: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      message: "Failed to verify Razorpay payment.",
+      error: error?.message || "Unknown error"
+    });
+  }
+});
+
+app.post("/api/bookings/confirm", async (req, res) => {
+  try {
+    const email = String(req.body?.email || "").trim().toLowerCase();
+    const bookingId = String(req.body?.bookingId || "").trim();
+    const purpose = String(req.body?.purpose || "Project Booking").trim();
+    const paymentMethod = String(req.body?.paymentMethod || "Payment").trim();
+    const amount = Number(req.body?.amount || 0);
+
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ ok: false, message: "Valid email is required." });
+    }
+    if (!bookingId) {
+      return res.status(400).json({ ok: false, message: "Booking ID is required." });
+    }
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return res.status(400).json({ ok: false, message: "Invalid amount." });
+    }
+    if (!mailTransporter || !hasSMTP) {
+      return res.status(500).json({ ok: false, message: "Email provider is not configured on server." });
+    }
+
+    await mailTransporter.sendMail({
+      from: smtpFromAddress,
+      to: email,
+      subject: `AAYNA Booking Confirmed - ${bookingId}`,
+      text: [
+        "Your Project Slot is Reserved.",
+        `Booking ID: ${bookingId}`,
+        `Purpose: ${purpose}`,
+        `Amount: INR ${amount.toFixed(2)}`,
+        `Payment Method: ${paymentMethod}`,
+        "",
+        "Thank you for booking with AAYNA Studio."
+      ].join("\n"),
+      html: `
+        <div style="font-family: Arial, sans-serif; line-height:1.6; color:#102030;">
+          <h2 style="margin-bottom:8px;">Your Project Slot is Reserved</h2>
+          <p style="margin:0 0 10px 0;">Booking details:</p>
+          <ul style="padding-left:18px; margin-top:0;">
+            <li><strong>Booking ID:</strong> ${bookingId}</li>
+            <li><strong>Purpose:</strong> ${purpose}</li>
+            <li><strong>Amount:</strong> INR ${amount.toFixed(2)}</li>
+            <li><strong>Payment Method:</strong> ${paymentMethod}</li>
+          </ul>
+          <p style="margin-top:14px;">Thank you for booking with <strong>AAYNA Studio</strong>.</p>
+        </div>
+      `
+    });
+
+    return res.json({ ok: true, message: `Confirmation email sent to ${maskIdentifier(email)}` });
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      message: "Failed to send booking confirmation email.",
+      error: error?.message || "Unknown error"
+    });
+  }
+});
+
+app.post("/api/mail/test", async (req, res) => {
+  try {
+    const to = String(req.body?.to || "").trim().toLowerCase();
+    if (!isValidEmail(to)) {
+      return res.status(400).json({ ok: false, message: "Valid recipient email is required." });
+    }
+    if (!mailTransporter || !hasSMTP) {
+      return res.status(500).json({ ok: false, message: "SMTP is not configured with real credentials." });
+    }
+
+    await mailTransporter.sendMail({
+      from: smtpFromAddress,
+      to,
+      subject: "AAYNA SMTP Test Email",
+      text: "If you received this, your SMTP configuration is working.",
+      html: "<p>If you received this, your SMTP configuration is <strong>working</strong>.</p>"
+    });
+
+    return res.json({ ok: true, message: `Test email sent to ${maskIdentifier(to)}` });
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      message: "Failed to send test email.",
+      error: error?.message || "Unknown error"
+    });
+  }
+});
+
 setInterval(() => {
   const now = Date.now();
   for (const [key, record] of otpStore.entries()) {
     if (record.expiresAt <= now) otpStore.delete(key);
+  }
+  for (const [orderId, data] of paymentOrderStore.entries()) {
+    if (data.createdAt + (30 * 60 * 1000) <= now) paymentOrderStore.delete(orderId);
   }
 }, 60 * 1000);
 
