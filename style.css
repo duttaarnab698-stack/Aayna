@@ -965,6 +965,7 @@ h1 {
 .featured-meta h4 {
   font-family: "Space Grotesk", sans-serif;
   margin-bottom: 6px;
+  white-space: pre-line;
 }
 
 .featured-meta p {
@@ -1054,6 +1055,11 @@ h1 {
   margin-bottom: 6px;
   font-family: "Space Grotesk", sans-serif;
   font-size: 1rem;
+  white-space: pre-line;
+}
+
+.modal-content h3 {
+  white-space: pre-line;
 }
 
 .video-meta p {

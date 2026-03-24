@@ -10,6 +10,16 @@ const LOCAL_OTP_KEY = "AAYNA_LOCAL_OTP";
 // Portfolio video data.
 const videoData = [
   {
+    id: 12,
+    title: "অগোছালো শহর❤️🙂\nদ্বিতীয় পর্ব",
+    category: "Short Reels",
+    views: "New",
+    date: "Mar 22, 2026",
+    thumbnail: "images/ogochalo-sohor-2nd-part-thumb.jpg",
+    videoUrl: "videos/ogochalo-sohor-2nd-part.mp4",
+    isPortrait: true
+  },
+  {
     id: 11,
     title: "\u0986\u09AE\u09BE\u09B0 \u0997\u09B0\u09CD\u09AC\u09C7\u09B0 \u09AE\u09BE\u09A4\u09C3\u09AD\u09BE\u09B7\u09BE \u2764\uFE0F\uD83E\uDD79",
     category: "Music",
@@ -83,6 +93,7 @@ const featuredCreationsData = [
 
 // Cinematic hero background reels.
 const heroReelVideos = [
+  { src: "videos/ogochalo-sohor-2nd-part.mp4", thumb: "images/ogochalo-sohor-2nd-part-thumb.jpg" },
   { src: "videos/shesh-sur.mp4", thumb: "images/shesh-sur-thumb.jpg" },
   { src: "videos/ogochalo-shohor.mp4", thumb: "images/ogochalo-shohor-thumb.jpg" },
   { src: "videos/black-ethnic.mp4", thumb: "images/black-ethnic-thumb.jpg" }
